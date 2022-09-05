@@ -1,0 +1,373 @@
+syntax = "proto3";
+
+package ogame.planet;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "PlanetService.Grpc";
+
+service PlanetService {
+  rpc GetResources(.ogame.planet.GetResourcesRequest)
+    returns (.ogame.planet.GetResourcesResponse);
+  rpc GetPlanetInfo(.ogame.planet.GetPlanetInfoRequest)
+    returns (.ogame.planet.GetPlanetInfoResponse);
+  rpc GetConstructions(.ogame.planet.GetConstructionsRequest)
+    returns (.ogame.planet.GetConstructionsResponse);
+  rpc GetMilitaryConstructions(.ogame.planet.GetMilitaryConstructionsRequest)
+    returns (.ogame.planet.GetMilitaryConstructionsResponse);
+  rpc CreateConstruction(.ogame.planet.CreateConstructionRequest)
+    returns (.ogame.planet.CreateConstructionResponse);
+  rpc CreateEventBid
+  (.ogame.planet.CreateEventBidRequest)
+    returns (.ogame.planet.CreateEventBidResponse);
+  rpc CreateExpedition
+  (.ogame.planet.CreateExpeditionRequest)
+    returns (.ogame.planet.CreateExpeditionResponse);
+  rpc GetPlanetsByUser(.ogame.planet.GetPlanetsByUserRequest)
+    returns (.ogame.planet.GetPlanetsByUserResponse);
+  rpc CreatePlanet(.ogame.planet.CreatePlanetRequest)
+    returns (.ogame.planet.CreatePlanetResponse);
+  rpc CheckPlanetOwner(.ogame.planet.CheckPlanetOwnerRequest)
+    returns (.ogame.planet.CheckPlanetOwnerResponse);
+}
+
+service InternalPlanetService {
+  rpc CompleteBuildingNotify(.ogame.planet.CompleteBuildingNotifyRequest)
+    returns (.ogame.planet.CompleteBuildingNotifyResponse);
+  rpc GetRecalculationData(.ogame.planet.GetRecalculationDataRequest)
+    returns (.ogame.planet.GetRecalculationDataResponse);
+  rpc GetResourcesGrowthPerHour(.ogame.planet.GetResourcesGrowthPerHourRequest)
+    returns (.ogame.planet.GetResourcesGrowthPerHourResponse);
+  rpc SendExpeditionResult(.ogame.planet.SendExpeditionResultRequest)
+    returns (.ogame.planet.SendExpeditionResultResponse);
+}
+
+enum ResourceType {
+  RESOURCE_TYPE_UNSPECIFIED = 0;
+  RESOURCE_TYPE_METAL = 1;
+  RESOURCE_TYPE_CRYSTAL = 2;
+  RESOURCE_TYPE_DEUTERIUM = 3;
+}
+
+message ResourceValue {
+  ResourceType resource_type = 1;
+  double value = 2;
+}
+
+message GetResourcesRequest {
+  int32 planet_id = 1;
+}
+
+message GetResourcesResponse {
+  repeated ResourceValue resource_values = 1;
+}
+
+message Planet {
+  string planet_id = 1;
+  string planet_name = 2;
+  int32 diameter = 3;
+  int32 temperature = 4;
+  string place = 5;
+}
+
+message BuildingQueue {
+  string construction_id = 1;
+  string construction_type = 2;
+  string construction_name = 3;
+  string construction_level = 4;
+  .google.protobuf.Timestamp remaining_time = 5;
+}
+
+message GetPlanetInfoRequest {
+  string planet_id = 1;
+}
+
+message GetPlanetInfoResponse {
+  Planet planet = 1;
+  repeated BuildingQueue building_queues = 6;
+}
+
+message GetConstructionsRequest {
+  string planet_id = 1;
+}
+
+message Construction {
+  string construction_id = 1;
+  string construction_name = 2;
+  string catalog_construction_id = 3;
+  string image_url = 4;
+  string short_description = 5;
+  string description = 6;
+  ConstructionType type = 7;
+  repeated string depends_level_ons = 8;
+  repeated ConstructionLevel levels = 9;
+  int32 current_level = 10;
+  bool is_existen = 11;
+  
+  enum ConstructionType {
+    CONSTRUCTION_TYPE_UNSPECIFIED = 0;
+    CONSTRUCTION_TYPE_METAL_PRODUCER = 1;
+    CONSTRUCTION_TYPE_CRYSTAL_PRODUCER = 2;
+    CONSTRUCTION_TYPE_DEUTERIUM_PRODUCER = 3;
+    CONSTRUCTION_TYPE_SOLAR_POWER_PLANT_PRODUCER = 4;
+    CONSTRUCTION_TYPE_THERMONUCLEAR_POWER_PLANT_PRODUCER = 5;
+    CONSTRUCTION_TYPE_METAL_STORAGE_PRODUCER = 6;
+    CONSTRUCTION_TYPE_CRYSTAL_STORAGE_PRODUCER = 7;
+    CONSTRUCTION_TYPE_DEUTERIUM_STORAGE_PRODUCER = 8;
+    CONSTRUCTION_TYPE_ROBOT_FACTORY = 9;
+    CONSTRUCTION_TYPE_SHIPYARD_FACTORY = 10;
+    CONSTRUCTION_TYPE_RESEARCH_LAB_FACTORY = 11;
+    CONSTRUCTION_TYPE_ALLIANCE_WAREHOUSE_FACTORY = 12;
+    CONSTRUCTION_TYPE_MISSILE_STORAGE_FACTORY = 13;
+    CONSTRUCTION_TYPE_NANITE_FACTORY = 14;
+    CONSTRUCTION_TYPE_TERRAFORMER_FACTORY = 15;
+    CONSTRUCTION_TYPE_SPACE_DOCK_FACTORY = 16;
+    CONSTRUCTION_TYPE_ENERGY_TECHNOLOGY = 17;
+    CONSTRUCTION_TYPE_LASER_TECHNOLOGY = 18;
+    CONSTRUCTION_TYPE_ION_TECHNOLOGY = 19;
+    CONSTRUCTION_TYPE_HYPERSPACE_TECHNOLOGY = 20;
+    CONSTRUCTION_TYPE_PLASMA_TECHNOLOGY = 21;
+    CONSTRUCTION_TYPE_JET_ENGINE_TECHNOLOGY = 22;
+    CONSTRUCTION_TYPE_IMPULSE_MOTOR_TECHNOLOGY = 23;
+    CONSTRUCTION_TYPE_HYPERSPACE_ENGINE_TECHNOLOGY = 24;
+    CONSTRUCTION_TYPE_ESPIONAGE_TECHNOLOGY = 25;
+    CONSTRUCTION_TYPE_COMPUTER_TECHNOLOGY = 26;
+    CONSTRUCTION_TYPE_ASTROPHYSICS_TECHNOLOGY = 27;
+    CONSTRUCTION_TYPE_INTERGALACTIC_RESEARCH_NETWORK_TECHNOLOGY = 28;
+    CONSTRUCTION_TYPE_GRAVITY_TECHNOLOGY = 29;
+    CONSTRUCTION_TYPE_WEAPON_TECHNOLOGY = 30;
+    CONSTRUCTION_TYPE_SHIELD_TECHNOLOGY = 31;
+    CONSTRUCTION_TYPE_SPACESHIP_ARMOR_TECHNOLOGY = 32;
+  }
+}
+
+message ConstructionLevel {
+  string id = 1;
+  int32 level_value = 2;
+  string construction_id = 3;
+  int32 delay_in_seconds = 4;
+  int32 energy_cost = 5;
+  int32 boost_rocket_capacity = 6;
+  int32 boost_ship_speed_percent = 7;
+  int32 boost_ship_shield_percent = 8;
+  int32 boost_defence_shield_percent = 9;
+  int32 boost_ship_attack_percent = 10;
+  int32 boost_defence_attack_percent = 11;
+  repeated ResourceValue resource_costs = 12;
+  repeated ResourceValue resource_produces = 13;
+  repeated ResourceValue boost_resource_capacities = 14;
+}
+
+message GetConstructionsResponse {
+  repeated Construction constructions = 1;
+}
+
+message Characteristic {
+  CombatSpecificationType specification = 1;
+  int32 value = 2;
+
+  enum CombatSpecificationType {
+    COMBAT_SPECIFICATION_TYPE_UNSPECIFIED = 0;
+    COMBAT_SPECIFICATION_TYPE_ARMOR = 1;
+    COMBAT_SPECIFICATION_TYPE_ATTACK = 2;
+    COMBAT_SPECIFICATION_TYPE_SPEED = 3;
+    COMBAT_SPECIFICATION_TYPE_FUEL_CONSUMPTION = 4;
+    COMBAT_SPECIFICATION_TYPE_LOAD_CAPACITY = 5;
+  }
+}
+
+message CreateConstructionRequest {
+  string planet_id = 1;
+  Construction.ConstructionType construction_type = 2;
+}
+
+message CreateConstructionResponse {
+  string construction_id = 1;
+  .google.protobuf.Timestamp remaining_time = 2;
+}
+
+message NotifyRecalculationDataRequest {
+}
+
+message CompleteBuildingNotifyRequest {
+  repeated string planet_construction_id = 1;
+}
+
+message CompleteBuildingNotifyResponse {
+}
+
+message Coefficient {
+  int32 coefficient_id = 1;
+  string coefficient_name = 2;
+  int32 coefficient_percent = 3;
+}
+
+message ProductorInformation {
+  repeated ResourceValue resources_consumeds = 1;
+  repeated ResourceValue resources_produceds = 2;
+  int32 coefficient = 3;
+  int32 count = 4;
+}
+
+message GetRecalculationDataRequest {
+  string planet_id = 1;
+}
+
+message GetRecalculationDataResponse {
+  repeated ProductorInformation productors = 1;
+}
+
+message GetResourcesGrowthPerHourRequest {
+  string planet_id = 1;
+}
+
+message GetResourcesGrowthPerHourResponse {
+  repeated ResourceValue resources = 1;
+}
+
+enum SpaceshipClassification {
+  SPACESHIP_CLASSIFICATION_UNSPECIFIED = 0;
+  SPACESHIP_CLASSIFICATION_LIGHT_FIGHTER = 1;
+  SPACESHIP_CLASSIFICATION_HEAVY_FIGHTER = 2;
+  SPACESHIP_CLASSIFICATION_CRUISER = 3;
+  SPACESHIP_CLASSIFICATION_BATTLESHIP = 4;
+  SPACESHIP_CLASSIFICATION_BATTLECRUISER = 5;
+  SPACESHIP_CLASSIFICATION_BOMBER = 6;
+  SPACESHIP_CLASSIFICATION_DESTROYER = 7;
+  SPACESHIP_CLASSIFICATION_DEATHSTAR = 8;
+  SPACESHIP_CLASSIFICATION_SMALL_CARGO = 9;
+  SPACESHIP_CLASSIFICATION_LARGE_CARGO = 10;
+  SPACESHIP_CLASSIFICATION_COLONY_SHIP = 11;
+  SPACESHIP_CLASSIFICATION_RECYCLER = 12;
+  SPACESHIP_CLASSIFICATION_ESPIONAGE_PROBE = 13;
+  SPACESHIP_CLASSIFICATION_SOLAR_SATELLITE = 14;
+}
+
+message SpaceshipValue {
+  SpaceshipClassification type = 1;
+  int32 amount = 2;
+}
+
+message ExplorerRequest {
+  string user_name  = 1;
+  string top_score  = 2;
+  string sent_from_planet_id  = 3;
+  int32 fuel  = 4;
+  int32 hold_time  = 5;
+  .google.protobuf.Timestamp departure_date_utc = 6;
+  .google.protobuf.Timestamp arrival_date_utc = 7;
+  .google.protobuf.Timestamp return_date_utc = 8;
+  int32 cargo_volume = 9;
+  repeated ResourceValue resources  = 10;
+  repeated SpaceshipValue warships   = 11;
+  repeated SpaceshipValue civilian_ships   = 12;
+}
+
+message CreateExpeditionRequest {
+  string planet_id  = 1;
+  ExplorerRequest user = 2;
+}
+
+message CreateExpeditionResponse {
+}
+
+message CreateEventBidRequest {
+  string auction_event_id = 1;
+  string user_id = 2;
+  string planet_id = 3;
+  repeated ResourceValue resource_usages = 4;
+}
+
+message CreateEventBidResponse {
+}
+
+message SendExpeditionResultRequest {
+  string planet_id = 1;
+  repeated ResourceValue resources = 3;
+}
+
+message SendExpeditionResultResponse {
+}
+
+message CreatePlanetRequest {
+  string user_id = 1;
+  string planet_name = 2;
+}
+
+message CreatePlanetResponse {
+  Planet planet = 1;
+}
+
+message MilitaryConstruction {
+  string id = 1;
+  string name = 2;
+  string image_url = 3;
+  string short_description = 4;
+  string description = 5;
+  int32 delay_in_seconds = 6;
+  int32 armor = 7;
+  int32 shield = 8;
+  int32 attack = 9;
+  int32 speed = 10;
+  int32 load_capacity = 11;
+  int32 fuel_consumption = 12;
+  MilitaryConstructionType type = 13;
+  repeated ResourceValue resource_costs = 14;
+  repeated string dependent_levels = 15;
+}
+
+enum MilitaryConstructionType {
+  MILITARY_CONSTRUCTION_TYPE_UNSPECIFIED = 0;
+  MILITARY_CONSTRUCTION_TYPE_FIGHTER_LIGHT = 1;
+  MILITARY_CONSTRUCTION_TYPE_FIGHTER_HEAVY = 2;
+  MILITARY_CONSTRUCTION_TYPE_CRUISER = 3;
+  MILITARY_CONSTRUCTION_TYPE_BATTLESHIP = 4;
+  MILITARY_CONSTRUCTION_TYPE_INTERCEPTOR = 5;
+  MILITARY_CONSTRUCTION_TYPE_BOMBER = 6;
+  MILITARY_CONSTRUCTION_TYPE_DESTROYER = 7;
+  MILITARY_CONSTRUCTION_TYPE_DEATHSTAR = 8;
+  MILITARY_CONSTRUCTION_TYPE_REAPER = 9;
+  MILITARY_CONSTRUCTION_TYPE_EXPLORER = 10;
+  MILITARY_CONSTRUCTION_TYPE_TRANSPORTER_SMALL = 11;
+  MILITARY_CONSTRUCTION_TYPE_TRANSPORTER_LARGE = 12;
+  MILITARY_CONSTRUCTION_TYPE_COLONY_SHIP = 13;
+  MILITARY_CONSTRUCTION_TYPE_RECYCLER = 14;
+  MILITARY_CONSTRUCTION_TYPE_ESPIONAGE_PROBE = 15;
+  MILITARY_CONSTRUCTION_TYPE_SOLAR_SATELLITE = 16;
+  MILITARY_CONSTRUCTION_TYPE_RESBUGGY = 17;
+  MILITARY_CONSTRUCTION_TYPE_ROCKET_LAUNCHER = 18;
+  MILITARY_CONSTRUCTION_TYPE_LASER_CANNON_LIGHT = 19;
+  MILITARY_CONSTRUCTION_TYPE_LASER_CANNON_HEAVY = 20;
+  MILITARY_CONSTRUCTION_TYPE_GAUSS_CANNON = 21;
+  MILITARY_CONSTRUCTION_TYPE_ION_CANNON = 22;
+  MILITARY_CONSTRUCTION_TYPE_PLASMA_CANNON = 23;
+  MILITARY_CONSTRUCTION_TYPE_SHIELD_DOME_SMALL = 24;
+  MILITARY_CONSTRUCTION_TYPE_SHIELD_DOME_LARGE = 25;
+  MILITARY_CONSTRUCTION_TYPE_MISSILE_INTERCEPTOR = 26;
+  MILITARY_CONSTRUCTION_TYPE_MISSILE_INTERPLANETARY = 27;
+}
+
+message GetMilitaryConstructionsRequest {
+  string planet_id = 1;
+}
+
+message GetMilitaryConstructionsResponse {
+  repeated MilitaryConstruction military_constructions = 1;
+}
+
+message GetPlanetsByUserRequest {
+  string user_id = 1;
+}
+
+message GetPlanetsByUserResponse {
+  repeated Planet planets = 1;
+}
+
+message CheckPlanetOwnerRequest {
+  string user_id = 1;
+  string planet_id = 2;
+}
+
+message CheckPlanetOwnerResponse {
+  bool status = 1;
+}

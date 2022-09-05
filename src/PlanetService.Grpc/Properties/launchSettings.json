@@ -1,0 +1,35 @@
+{
+   "iisSettings": {
+      "windowsAuthentication": false,
+      "anonymousAuthentication": true,
+      "iisExpress": {
+         "applicationUrl": "http://localhost:62882/",
+         "sslPort": 44318
+      }
+   },
+   "profiles": {
+      "PlanetService.Grpc": {
+         "commandName": "Project",
+         "launchBrowser": true,
+         "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+         },
+         "applicationUrl": "http://localhost:5032;https://localhost:7032",
+         "dotnetRunMessages": true
+      },
+      "IIS Express": {
+         "commandName": "IISExpress",
+         "launchBrowser": true,
+         "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+         }
+      },
+      "Docker": {
+         "commandName": "Docker",
+         "launchBrowser": true,
+         "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+         "publishAllPorts": true,
+         "useSSL": true
+      }
+   }
+}

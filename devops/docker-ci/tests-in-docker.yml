@@ -1,0 +1,100 @@
+---
+
+version: "3.8"
+
+services:
+  planet_test_postgres:
+    container_name: PlanetService_TestPostgres
+    image: postgres:13.3
+    pull_policy: if_not_present
+    environment:
+      - POSTGRES_DB=PlanetDbIntegrationTest
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U postgres -d PlanetDbIntegrationTest"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+    logging:
+      driver: none
+
+  planet_test_migrator:
+    container_name: PlanetService_TestMigrator
+    image: mcr.microsoft.com/dotnet/sdk:6.0
+    pull_policy: if_not_present
+    environment:
+      - ASPNETCORE_ENVIRONMENT=IntegrationTest
+      - DbConn=Host=planet_test_postgres;Port=5432;Database=PlanetDbIntegrationTest;User Id=postgres;Password=123
+    volumes:
+      - ./../../src:/app-migrator/src
+      - ./../../devops:/app-migrator/devops
+    command:
+      [
+        "dotnet",
+        "run",
+        "--project",
+        "/app-migrator/src/PlanetService.DatabaseMigrator/PlanetService.DatabaseMigrator.csproj",
+        "--connection-string-source",
+        "env",
+        "--connection-string-env-variable-name",
+        "DbConn"
+      ]
+    depends_on:
+      planet_test_postgres:
+        condition: service_healthy
+
+  integration_tests:
+    container_name: PlanetService_IntegrationTests
+    image: mcr.microsoft.com/dotnet/sdk:6.0
+    pull_policy: if_not_present
+    environment:
+      - ASPNETCORE_ENVIRONMENT=IntegrationTest
+      - PlanetSrv_ConnectionStrings__PlanetDb=Host=planet_test_postgres;Port=5432;Database=PlanetDbIntegrationTest;User Id=postgres;Password=123
+    volumes:
+      - ./../../devops/:/app/devops
+      - ./../../src:/app/src
+      - ./../../tests:/app/tests
+    command:
+      [
+        "dotnet",
+        "test",
+        "./app/tests/PlanetService.IntegrationTests/PlanetService.IntegrationTests.csproj"
+      ]
+    depends_on:
+      planet_test_migrator:
+        condition: service_completed_successfully
+
+  functional_tests:
+    container_name: PlanetService_FunctionalTests
+    image: mcr.microsoft.com/dotnet/sdk:6.0
+    pull_policy: if_not_present
+    environment:
+      - ASPNETCORE_ENVIRONMENT=IntegrationTest
+      - PlanetSrv_ConnectionStrings__PlanetDb=Host=planet_test_postgres;Port=5432;Database=PlanetDbIntegrationTest;User Id=postgres;Password=123
+    volumes:
+      - ./../../devops/:/app/devops
+      - ./../../src:/app/src
+      - ./../../tests:/app/tests
+    command:
+      [
+        "dotnet",
+        "test",
+        "./app/tests/PlanetService.FunctionalTests/PlanetService.FunctionalTests.csproj"
+      ]
+    depends_on:
+      planet_test_migrator:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_volume:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

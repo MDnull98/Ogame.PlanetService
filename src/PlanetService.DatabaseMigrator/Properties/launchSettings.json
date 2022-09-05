@@ -1,0 +1,10 @@
+{
+   "profiles": {
+      "PlanetService.DatabaseMigrator": {
+         "commandName": "Project"
+      },
+      "Docker (1)": {
+         "commandName": "Docker"
+      }
+   }
+}

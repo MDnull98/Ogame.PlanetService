@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: planetservice-{{ .Release.Name }}-deploy
+  labels:
+    app: {{ .Values.planetservice.labels.app }}
+    env: {{ .Values.env }}
+    targetApp: {{ .Values.targetApp }}
+    namespace: {{ .Values.namespace }}
+    owner: {{ .Values.owner }}
+spec:
+  selector:
+    matchLabels:
+      app: planetservice-{{ .Release.Name }}-container
+  template:
+    metadata:
+      labels:
+        app: planetservice-{{ .Release.Name }}-container
+        env: {{ .Values.env }}
+        targetApp: {{ .Values.targetApp }}
+        namespace: {{ .Values.namespace }}
+        owner: {{ .Values.owner }}
+    spec:
+      initContainers:
+        - name: wait-for-postgres-container
+          image: willwill/wait-for-it:latest
+          imagePullPolicy: {{ .Values.planetservice.deployment.imagePullPolicy }}
+          args:
+            - "planetservice-postgres-{{ .Release.Name }}-svc:{{ .Values.postgres.servicePort }}"
+        - name: postgres-migrator-container
+          image: {{ .Values.planetservice.deployment.init.image }}
+          imagePullPolicy: {{ .Values.planetservice.deployment.imagePullPolicy }}
+          args:
+            - "dotnet"
+            - "./PlanetService.DatabaseMigrator.dll"
+            - "--connection-string-source=env"
+            - "--connection-string-env-variable-name=PlanetSrv_ConnectionStrings__PlanetDb"
+          env:
+            - name: PlanetSrv_ConnectionStrings__PlanetDb
+              valueFrom:
+                secretKeyRef:
+                  name: planetservice-{{ .Release.Name }}-secrets
+                  key: databaseConnection
+
+      containers:
+        - name: planetservice-{{ .Release.Name }}-container
+          image: {{ .Values.planetservice.deployment.image }}
+          imagePullPolicy: {{ .Values.planetservice.deployment.imagePullPolicy }}
+          resources:
+            requests:
+              memory: {{ .Values.planetservice.deployment.resources.requests.memory }}
+              cpu: {{ .Values.planetservice.deployment.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.planetservice.deployment.resources.limits.memory }}
+              cpu: {{ .Values.planetservice.deployment.resources.limits.cpu }}                
+          env:
+            - name: "PlanetSrv_ConnectionStrings__PlanetDb"
+              valueFrom:
+                secretKeyRef:
+                  name: planetservice-{{ .Release.Name }}-secrets
+                  key: "databaseConnection"
+            - name: "DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2UNENCRYPTEDSUPPORT"
+              value: "true"
+            - name: "ASPNETCORE_ENVIRONMENT"
+              value: "Development"
+          ports:
+            - containerPort: {{ .Values.planetservice.containerPort }}
+          livenessProbe:
+            grpc:
+              port: {{ .Values.planetservice.containerPort }}
+            initialDelaySeconds: {{ .Values.planetservice.deployment.probe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.planetservice.deployment.probe.periodSeconds }}
+            timeoutSeconds: {{ .Values.planetservice.deployment.probe.timeoutSeconds }}              
+          readinessProbe:
+            grpc:
+              port: {{ .Values.planetservice.containerPort }}
+            initialDelaySeconds: {{ .Values.planetservice.deployment.probe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.planetservice.deployment.probe.periodSeconds }}              
+            timeoutSeconds: {{ .Values.planetservice.deployment.probe.timeoutSeconds }}             
+
+      imagePullSecrets:
+        - name: ogame-container-registry-config-{{ .Release.Name }}

@@ -1,0 +1,150 @@
+---
+
+stages:
+  - quality
+  - unit
+  - test
+  - publish
+
+variables:
+  NUGET_PACKAGES_DIRECTORY: /app-packages/nuget
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_TLS_CERTDIR: ""
+  LINTERS_EXCLUDE_FOLDERS_REGEX: (packages|nuget|obj|bin)
+  SERVICE_DOCKERFILE_PATH: ./src/PlanetService.Grpc/Dockerfile
+  SERVICE_IMAGE: planet-service:$CI_COMMIT_REF_NAME
+  MIGRATOR_DOCKERFILE_PATH: ./src/PlanetService.DatabaseMigrator/Dockerfile
+  MIGRATOR_IMAGE: planet-migrator:$CI_COMMIT_REF_NAME
+  UNIT_TESTS_PROJ_PATH: ./tests/PlanetService.UnitTests/PlanetService.UnitTests.csproj
+
+
+cache:
+  key: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"
+  paths:
+    - "./src/PlanetService.DatabaseMigrator/obj/project.assets.json"
+    - "$NUGET_PACKAGES_DIRECTORY"
+  policy: pull-push
+
+Build:
+  stage: quality
+  needs: []
+  image: mcr.microsoft.com/dotnet/sdk:6.0
+  tags:
+    - docker-cicd
+  before_script:
+    - dotnet restore --packages $NUGET_PACKAGES_DIRECTORY
+  script:
+    - dotnet build --no-restore --packages $NUGET_PACKAGES_DIRECTORY
+
+Linters:
+  stage: quality
+  needs: []
+  image: megalinter/megalinter:v5.16.1
+  tags:
+    - docker-cicd
+  script: ["true"]
+  variables:
+    DEFAULT_WORKSPACE: $CI_PROJECT_DIR
+    EDITORCONFIG_EDITORCONFIG_CHECKER_CONFIG_FILE: .editorconfig
+    ENABLE_LINTERS: CREDENTIALS_SECRETLINT,DOCKERFILE_HADOLINT,EDITORCONFIG_EDITORCONFIG_CHECKER,GIT_GIT_DIFF,JSON_JSONLINT,JSON_ESLINT_PLUGIN_JSONC,JSON_V8R,JSON_PRETTIER,MARKDOWN_MARKDOWNLINT,MARKDOWN_MARKDOWN_LINK_CHECK,MARKDOWN_MARKDOWN_TABLE_FORMATTER,POWERSHELL_POWERSHELL,PROTOBUF_PROTOLINT,SPELL_MISSPELL,YAML_PRETTIER,YAML_V8R,CSHARP_DOTNET_FORMAT
+    DOCKERFILE_HADOLINT_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    JSON_JSONLINT_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    JSON_ESLINT_PLUGIN_JSONC_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    JSON_V8R_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    JSON_PRETTIER_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    MARKDOWN_MARKDOWN_TABLE_FORMATTER_ARGUMENTS: -columnpadding 1
+    MARKDOWN_MARKDOWN_TABLE_FORMATTER_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    POWERSHELL_POWERSHELL_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    PROTOBUF_PROTOLINT_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    SPELL_MISSPELL_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    YAML_PRETTIER_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    YAML_V8R_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+    CSHARP_DOTNET_FORMAT_FILTER_REGEX_EXCLUDE: $LINTERS_EXCLUDE_FOLDERS_REGEX
+  only:
+    refs:
+      - dev
+
+UnitTest:
+  stage: unit
+  needs: ["Build"]
+  image: mcr.microsoft.com/dotnet/sdk:6.0
+  tags:
+    - docker-cicd
+  script:
+    - dotnet test $UNIT_TESTS_PROJ_PATH --no-restore
+
+IntegrationTest:
+  stage: test
+  needs: ["UnitTest"]
+  image: docker:20.10.16
+  tags:
+    - docker-cicd
+  before_script:
+    - docker info
+  script:
+    - docker compose -f ./devops/docker-ci/tests-in-docker.yml up --exit-code-from integration_tests -- integration_tests
+  after_script:
+    - docker compose -f ./devops/docker-ci/tests-in-docker.yml stop
+  services:
+    - docker:20.10.16-dind
+  only:
+    refs:
+      - dev
+
+FunctionalTest:
+  stage: test
+  needs: ["UnitTest"]
+  image: docker:20.10.16
+  tags:
+    - docker-cicd
+  before_script:
+    - docker info
+  script:
+    - docker compose -f ./devops/docker-ci/tests-in-docker.yml up --exit-code-from functional_tests -- functional_tests
+  after_script:
+    - docker compose -f ./devops/docker-ci/tests-in-docker.yml stop
+  services:
+    - docker:20.10.16-dind
+  only:
+    refs:
+      - dev
+      
+PublishServiceImage:
+  stage: publish
+  needs: ["IntegrationTest", "FunctionalTest"]
+  image: docker:20.10.16
+  tags:
+    - docker-cicd
+  before_script:
+    - chmod +x ./devops/publish-image.sh
+    - echo "$CONTAINER_REGYSTRY_PASSWORD" | docker login $CONTAINER_REGYSTRY_URL -u "$CONTAINER_REGYSTRY_USER" --password-stdin
+  script:
+    - ./devops/publish-image.sh $SERVICE_DOCKERFILE_PATH $SERVICE_IMAGE-$CI_COMMIT_SHORT_SHA $CONTAINER_REGYSTRY_URL/$SERVICE_IMAGE-$CI_COMMIT_SHORT_SHA
+    - ./devops/publish-image.sh $SERVICE_DOCKERFILE_PATH $SERVICE_IMAGE-latest $CONTAINER_REGYSTRY_URL/$SERVICE_IMAGE-latest
+  services:
+    - docker:20.10.16-dind
+  only:
+    refs:
+      - dev
+
+PublishMigratorImage:
+  stage: publish
+  needs: ["IntegrationTest", "FunctionalTest"]
+  image: docker:20.10.16
+  tags:
+    - docker-cicd
+  before_script:
+    - chmod +x ./devops/publish-image.sh
+    - echo "$CONTAINER_REGYSTRY_PASSWORD" | docker login $CONTAINER_REGYSTRY_URL -u "$CONTAINER_REGYSTRY_USER" --password-stdin
+  script:
+    - ./devops/publish-image.sh $MIGRATOR_DOCKERFILE_PATH $MIGRATOR_IMAGE-$CI_COMMIT_SHORT_SHA $CONTAINER_REGYSTRY_URL/$MIGRATOR_IMAGE-$CI_COMMIT_SHORT_SHA
+    - ./devops/publish-image.sh $MIGRATOR_DOCKERFILE_PATH $MIGRATOR_IMAGE-latest $CONTAINER_REGYSTRY_URL/$MIGRATOR_IMAGE-latest
+  services:
+    - docker:20.10.16-dind
+  only:
+    refs:
+      - dev
+      

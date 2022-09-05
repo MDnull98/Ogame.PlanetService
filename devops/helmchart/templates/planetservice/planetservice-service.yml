@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: planetservice-{{ .Release.Name }}-svc
+  labels:
+    app: {{ .Values.planetservice.labels.app }}
+    env: {{ .Values.env }}
+    targetApp: {{ .Values.targetApp }}
+    namespace: {{ .Values.namespace }}
+    owner: {{ .Values.owner }}
+spec:
+  selector:
+    app: planetservice-{{ .Release.Name }}-container
+  ports:
+    - name: app-listener
+      protocol: TCP
+      port: {{ .Values.planetservice.servicePort }}
+      targetPort: {{ .Values.planetservice.containerPort }}
+  type: {{ .Values.planetservice.service.type }}

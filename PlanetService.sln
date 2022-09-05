@@ -1,0 +1,80 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetService.Grpc", "src\PlanetService.Grpc\PlanetService.Grpc.csproj", "{CDD3B109-13D3-4373-9009-007B59CCC03C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C71DF918-4227-40AB-A3BB-4F2FF1151699} = {C71DF918-4227-40AB-A3BB-4F2FF1151699}
+		{918089B0-74CD-4E24-BA27-24F91B7A27DB} = {918089B0-74CD-4E24-BA27-24F91B7A27DB}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetService.DataAccess", "src\PlanetService.DataAccess\PlanetService.DataAccess.csproj", "{C71DF918-4227-40AB-A3BB-4F2FF1151699}"
+	ProjectSection(ProjectDependencies) = postProject
+		{918089B0-74CD-4E24-BA27-24F91B7A27DB} = {918089B0-74CD-4E24-BA27-24F91B7A27DB}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetService.BusinessLogic", "src\PlanetService.BusinessLogic\PlanetService.BusinessLogic.csproj", "{918089B0-74CD-4E24-BA27-24F91B7A27DB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FA72015C-22A8-46B0-9A2C-F31A1C8FC071}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetService.DatabaseMigrator", "src\PlanetService.DatabaseMigrator\PlanetService.DatabaseMigrator.csproj", "{91A6F49C-F1AA-4462-93C6-B230B0E11D74}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1F648BBD-6994-440A-AF6F-74FAAC9FC43B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetService.UnitTests", "tests\PlanetService.UnitTests\PlanetService.UnitTests.csproj", "{BDF71A8D-DCC5-4F48-9C64-AAB854A8BAE6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetService.IntegrationTests", "tests\PlanetService.IntegrationTests\PlanetService.IntegrationTests.csproj", "{33333EE2-1D01-45E7-A679-745A3AE9D158}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlanetService.FunctionalTests", "tests\PlanetService.FunctionalTests\PlanetService.FunctionalTests.csproj", "{D94FBEBF-7B2E-4AE5-9AAA-CAB12FCB53F5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CDD3B109-13D3-4373-9009-007B59CCC03C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDD3B109-13D3-4373-9009-007B59CCC03C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDD3B109-13D3-4373-9009-007B59CCC03C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDD3B109-13D3-4373-9009-007B59CCC03C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C71DF918-4227-40AB-A3BB-4F2FF1151699}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C71DF918-4227-40AB-A3BB-4F2FF1151699}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C71DF918-4227-40AB-A3BB-4F2FF1151699}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C71DF918-4227-40AB-A3BB-4F2FF1151699}.Release|Any CPU.Build.0 = Release|Any CPU
+		{918089B0-74CD-4E24-BA27-24F91B7A27DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{918089B0-74CD-4E24-BA27-24F91B7A27DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{918089B0-74CD-4E24-BA27-24F91B7A27DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{918089B0-74CD-4E24-BA27-24F91B7A27DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91A6F49C-F1AA-4462-93C6-B230B0E11D74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91A6F49C-F1AA-4462-93C6-B230B0E11D74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91A6F49C-F1AA-4462-93C6-B230B0E11D74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91A6F49C-F1AA-4462-93C6-B230B0E11D74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDF71A8D-DCC5-4F48-9C64-AAB854A8BAE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDF71A8D-DCC5-4F48-9C64-AAB854A8BAE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDF71A8D-DCC5-4F48-9C64-AAB854A8BAE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDF71A8D-DCC5-4F48-9C64-AAB854A8BAE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33333EE2-1D01-45E7-A679-745A3AE9D158}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33333EE2-1D01-45E7-A679-745A3AE9D158}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33333EE2-1D01-45E7-A679-745A3AE9D158}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33333EE2-1D01-45E7-A679-745A3AE9D158}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D94FBEBF-7B2E-4AE5-9AAA-CAB12FCB53F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D94FBEBF-7B2E-4AE5-9AAA-CAB12FCB53F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D94FBEBF-7B2E-4AE5-9AAA-CAB12FCB53F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D94FBEBF-7B2E-4AE5-9AAA-CAB12FCB53F5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BDF71A8D-DCC5-4F48-9C64-AAB854A8BAE6} = {1F648BBD-6994-440A-AF6F-74FAAC9FC43B}
+		{33333EE2-1D01-45E7-A679-745A3AE9D158} = {1F648BBD-6994-440A-AF6F-74FAAC9FC43B}
+		{D94FBEBF-7B2E-4AE5-9AAA-CAB12FCB53F5} = {1F648BBD-6994-440A-AF6F-74FAAC9FC43B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C40DABD6-AAAA-4361-BC2F-C7E0D2ECA093}
+	EndGlobalSection
+EndGlobal

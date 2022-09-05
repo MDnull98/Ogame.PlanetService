@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  step_build:
+    image: mcr.microsoft.com/dotnet/sdk:6.0
+    container_name: PlanetService_BuildSolution
+    volumes:
+      - ./../../:/app
+    working_dir: /app
+    command: dotnet restore ./PlanetService.sln && dotnet build
+
+  step_linter:
+    image: megalinter/megalinter:v5.16.1
+    container_name: PlanetService_LinterQuality
+    environment: 
+      - DEFAULT_WORKSPACE=/app
+      - EDITORCONFIG_EDITORCONFIG_CHECKER_CONFIG_FILE=.editorconfig
+      - ENABLE_LINTERS=CREDENTIALS_SECRETLINT,COPYPASTE_JSCPD,DOCKERFILE_HADOLINT,EDITORCONFIG_EDITORCONFIG_CHECKER,JSON_JSONLINT,JSON_ESLINT_PLUGIN_JSONC,JSON_V8R,JSON_PRETTIER,MARKDOWN_MARKDOWNLINT,MARKDOWN_MARKDOWN_LINK_CHECK,MARKDOWN_MARKDOWN_TABLE_FORMATTER,POWERSHELL_POWERSHELL,PROTOBUF_PROTOLINT,SPELL_MISSPELL,YAML_PRETTIER,YAML_V8R,CSHARP_DOTNET_FORMAT
+      - DOCKERFILE_HADOLINT_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - EDITORCONFIG_EDITORCONFIG_CHECKER_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - JSON_JSONLINT_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - JSON_ESLINT_PLUGIN_JSONC_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - JSON_V8R_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - JSON_PRETTIER_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - MARKDOWN_MARKDOWN_TABLE_FORMATTER_ARGUMENTS="-columnpadding 1"
+      - MARKDOWN_MARKDOWN_TABLE_FORMATTER_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - POWERSHELL_POWERSHELL_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - PROTOBUF_PROTOLINT_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - SPELL_MISSPELL_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - YAML_PRETTIER_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - YAML_V8R_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+      - CSHARP_DOTNET_FORMAT_FILTER_REGEX_EXCLUDE=(packages|nuget|obj|bin|volumes)
+    volumes:
+      - ./../../build:/app/build
+      - ./../../devops:/app/devops
+      - ./../../docs:/app/docs
+      - ./../../src:/app/src
+      - ./../../.jscpd.json:/app/.jscpd.json
+      - ./../../.editorconfig:/app/.editorconfig
+      - ./../../README.md:/app/README.md
+      - ./../../PlanetService.sln:/app/PlanetService.sln
+    command: "true"
+    depends_on:
+      step_build:
+        condition: service_completed_successfully
+  
+  step_unit_tests:
+    image: mcr.microsoft.com/dotnet/sdk:6.0
+    container_name: PlanetService_UnitTests
+    volumes:
+      - ./../../:/app
+    working_dir: /app
+    command: dotnet test /app/tests/PlanetService.UnitTests/PlanetService.UnitTests.csproj
+    depends_on:
+      step_linter:
+        condition: service_completed_successfully

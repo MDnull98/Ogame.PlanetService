@@ -1,0 +1,43 @@
+﻿version: '3'
+
+services:
+  planet_grpc_postgres:
+    container_name: OGame_PlanetService_Postgres
+    image: postgres:13.3
+    env_file: .env
+    ports:
+      - 5555:5432
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d PlanetDb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes: 
+      - .\\volumes\\postgres-data\\:/var/lib/postgresql/data
+
+  planet_postgres_migrator:
+    container_name: OGame_PlanetService_Migrator
+    build:
+      context: ./../
+      dockerfile: ./src/PlanetService.DatabaseMigrator/Dockerfile
+    env_file: .env
+    command: dotnet PlanetService.DatabaseMigrator.dll --connection-string-source env --connection-string-env-variable-name PlanetSrv_ConnectionStrings__PlanetDb
+    depends_on:
+      planet_grpc_postgres:
+        condition: service_healthy
+
+  planet_service:
+    container_name: OGame_Grpc_PlanetService
+    build:
+      context: ./../
+      dockerfile: ./src/PlanetService.Grpc/Dockerfile
+    env_file: .env
+    ports:
+      - 1234:80
+    depends_on:
+      planet_postgres_migrator:
+        condition: service_completed_successfully
+      planet_grpc_postgres:
+        condition: service_healthy

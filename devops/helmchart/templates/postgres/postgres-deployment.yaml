@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: planetservice-postgres-{{ .Release.Name }}-deploy
+  labels:
+    app: {{ .Values.postgres.labels.app }}
+    env: {{ .Values.env }}
+    targetApp: {{ .Values.targetApp }}
+    namespace: {{ .Values.namespace }}
+    owner: {{ .Values.owner }}
+spec:
+  selector:
+    matchLabels:
+      app: planetservice-postgres-{{ .Release.Name }}-container
+  template:
+    metadata:
+      labels:
+        app: planetservice-postgres-{{ .Release.Name }}-container
+        env: {{ .Values.env }}
+        targetApp: {{ .Values.targetApp }}
+        namespace: {{ .Values.namespace }}
+        owner: {{ .Values.owner }}
+    spec:
+      containers:
+        - name: planetservice-postgres-{{ .Release.Name }}-container
+          image: {{ .Values.postgres.deployment.image }}
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: planetservice-{{ .Release.Name }}-secrets
+                  key: "postgresDatabase"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: planetservice-{{ .Release.Name }}-secrets
+                  key: "postgresPassword"
+          resources:
+            requests:
+              memory:
+                {{ .Values.postgres.deployment.resources.requests.memory }}
+              cpu: {{ .Values.postgres.deployment.resources.requests.cpu }}
+            limits:
+              memory:
+                {{ .Values.postgres.deployment.resources.limits.memory }}
+              cpu: {{ .Values.postgres.deployment.resources.limits.cpu }}
+          ports:
+            - containerPort: {{ .Values.postgres.containerPort }}
+          readinessProbe:
+            exec:
+              command:
+              - pg_isready
+              - -U postgres
+              - -d PlanetDb
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: planetservice-postgres-{{ .Release.Name }}-volume-mount
+      volumes:
+        - name: planetservice-postgres-{{ .Release.Name }}-volume-mount
+          persistentVolumeClaim:
+            claimName: planetservice-postgres-{{ .Release.Name }}-pvc

@@ -1,0 +1,14 @@
+{
+   "threshold": 5,
+   "reporters": ["markdown"],
+   "ignore": [
+      "**/.vs/**",
+      "**/.git/**",
+      "**/bin/**",
+      "**/obj/**",
+      "**/docs/**",
+      "**/*.md",
+      "**/tests/**",
+      "**/*.Designer.cs**"
+   ]
+}
